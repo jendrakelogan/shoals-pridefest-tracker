@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
-let tempId = 1
-const uid = () => `temp_${tempId++}`
 
 export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
   const [categories, setCategories] = useState([])
@@ -15,7 +13,7 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
   // ── Load data ─────────────────────────────────────────────────
   useEffect(() => {
     loadData()
-  }, [sc.id])
+  }, [sc.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadData() {
     setLoading(true)

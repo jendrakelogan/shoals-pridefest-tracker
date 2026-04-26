@@ -12,7 +12,7 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState({})
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { loadAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadAll() {
     setLoading(true)

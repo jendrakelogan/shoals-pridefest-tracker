@@ -4,7 +4,7 @@ export default function LandingPage({ subcommittees, passcodes, onLogin }) {
   const [selected, setSelected]   = useState(null)
   const [code, setCode]           = useState('')
   const [error, setError]         = useState('')
-  const [showBoard, setShowBoard] = useState(false)
+
 
   const allEntries = [
     ...subcommittees,
@@ -15,7 +15,7 @@ export default function LandingPage({ subcommittees, passcodes, onLogin }) {
     setSelected(id)
     setCode('')
     setError('')
-    setShowBoard(id === 'board')
+
   }
 
   const handleSubmit = () => {
