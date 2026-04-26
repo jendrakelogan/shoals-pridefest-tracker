@@ -294,5 +294,3 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
     </div>
   )
 }
-  )
-}
