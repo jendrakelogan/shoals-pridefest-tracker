@@ -118,11 +118,9 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
   const TaskCard = ({ task, catId, ti, totalTasks }) => {
     const ss = STATUS_STYLE[task.status] || STATUS_STYLE['Not Started']
 
-    if (isMobile) {
+    if (isMobile) { // mobile layout
       return (
         <div
-          draggable
-          onDragStart={() => handleDragStart(catId, ti)}
           onDragEnter={() => handleDragEnter(catId, ti)}
           onDragEnd={handleDragEnd}
           onDragOver={e => e.preventDefault()}
@@ -134,7 +132,11 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
         >
           {/* Mobile top row: drag handle + status + delete */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ color: '#C0C0C0', fontSize: '18px', cursor: 'grab', userSelect: 'none' }}>⠿</span>
+            <span
+              draggable
+              onDragStart={() => handleDragStart(catId, ti)}
+              style={{ color: '#C0C0C0', fontSize: '18px', cursor: 'grab', userSelect: 'none', touchAction: 'none' }}
+            >⠿</span>
             <select
               value={task.status}
               onChange={e => updateTask(catId, task.id, 'status', e.target.value)}
