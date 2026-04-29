@@ -6,29 +6,26 @@ import './App.css'
 
 // Passcodes — change these before sharing!
 export const PASSCODES = {
-  'venue-design':      { code: 'VENUE826', label: 'Venue Design & Local Art' },
-  'operations':        { code: 'OPS2026',  label: 'Operations, Safety & Logistics' },
-  'outreach':          { code: 'OUT417',   label: 'Community Outreach / Partnerships / Fundraising' },
-  'programming':       { code: 'PROG553',  label: 'Programming & Entertainment' },
-  'branding-design':   { code: 'BRD991',   label: 'Branding & Marketing: DESIGN' },
-  'branding-impl':     { code: 'BRI664',   label: 'Branding & Marketing: IMPLEMENTATION' },
-  'board':             { code: 'BOARD2026',label: 'Board — Full Overview' },
+  'venue-design': { code: 'VENUE826',  label: 'Venue Design & Local Art' },
+  'operations':   { code: 'OPS2026',   label: 'Operations, Safety & Logistics' },
+  'outreach':     { code: 'OUT417',    label: 'Community Outreach / Partnerships / Fundraising' },
+  'programming':  { code: 'PROG553',   label: 'Programming & Entertainment' },
+  'branding':     { code: 'BRD991',    label: 'Branding & Marketing' },
+  'board':        { code: 'BOARD2026', label: 'Board — Full Overview' },
 }
 
 export const SUBCOMMITTEES = [
-  { id: 'venue-design',    label: 'Venue Design & Local Art',                          emoji: '🎨', color: '#C0392B' },
-  { id: 'operations',      label: 'Operations, Safety & Logistics',                    emoji: '⚙️',  color: '#1A5276' },
-  { id: 'outreach',        label: 'Community Outreach / Partnerships / Fundraising',   emoji: '🤝', color: '#1A7A4A' },
-  { id: 'programming',     label: 'Programming & Entertainment',                       emoji: '🎤', color: '#6C3483' },
-  { id: 'branding-design', label: 'Branding & Marketing: DESIGN',                     emoji: '✏️',  color: '#B7770D' },
-  { id: 'branding-impl',   label: 'Branding & Marketing: IMPLEMENTATION',              emoji: '📣', color: '#117A65' },
+  { id: 'venue-design', label: 'Venue Design & Local Art',                        emoji: '🎨', color: '#C0392B' },
+  { id: 'operations',   label: 'Operations, Safety & Logistics',                  emoji: '⚙️',  color: '#1A5276' },
+  { id: 'outreach',     label: 'Community Outreach / Partnerships / Fundraising', emoji: '🤝', color: '#1A7A4A' },
+  { id: 'programming',  label: 'Programming & Entertainment',                     emoji: '🎤', color: '#6C3483' },
+  { id: 'branding',     label: 'Branding & Marketing',                            emoji: '📣', color: '#B7770D' },
 ]
 
 export default function App() {
-  const [view, setView]               = useState('landing') // 'landing' | 'subcommittee' | 'board'
+  const [view, setView]                 = useState('landing')
   const [activeSubcommittee, setActive] = useState(null)
 
-  // Persist session in localStorage so refresh doesn't log you out
   useEffect(() => {
     const saved = localStorage.getItem('pf_session')
     if (saved) {
@@ -40,12 +37,10 @@ export default function App() {
 
   const login = (subcommitteeId) => {
     if (subcommitteeId === 'board') {
-      const session = { view: 'board', id: null }
-      localStorage.setItem('pf_session', JSON.stringify(session))
+      localStorage.setItem('pf_session', JSON.stringify({ view: 'board', id: null }))
       setView('board')
     } else {
-      const session = { view: 'subcommittee', id: subcommitteeId }
-      localStorage.setItem('pf_session', JSON.stringify(session))
+      localStorage.setItem('pf_session', JSON.stringify({ view: 'subcommittee', id: subcommitteeId }))
       setActive(subcommitteeId)
       setView('subcommittee')
     }
