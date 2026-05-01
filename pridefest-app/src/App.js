@@ -11,7 +11,7 @@ export const PASSCODES = {
   'outreach':     { code: 'OUT417',    label: 'Community Outreach / Partnerships / Fundraising' },
   'programming':  { code: 'PROG553',   label: 'Programming & Entertainment' },
   'branding':     { code: 'BRD991',    label: 'Branding & Marketing' },
-  'board':        { code: 'BOARD2026', label: 'Board — Full Overview' },
+  'board':        { code: 'UNITY',     label: 'Overview' },
 }
 
 export const SUBCOMMITTEES = [
