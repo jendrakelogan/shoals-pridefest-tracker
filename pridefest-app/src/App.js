@@ -6,11 +6,11 @@ import './App.css'
 
 // Passcodes — change these before sharing!
 export const PASSCODES = {
-  'venue-design': { code: 'VENUE826',  label: 'Venue Design & Local Art' },
-  'operations':   { code: 'OPS2026',   label: 'Operations, Safety & Logistics' },
-  'outreach':     { code: 'OUT417',    label: 'Community Outreach / Partnerships / Fundraising' },
-  'programming':  { code: 'PROG553',   label: 'Programming & Entertainment' },
-  'branding':     { code: 'BRD991',    label: 'Branding & Marketing' },
+  'venue-design': { code: 'DESIGN1',  label: 'Venue Design & Local Art' },
+  'operations':   { code: 'OPS2',   label: 'Operations, Safety & Logistics' },
+  'outreach':     { code: 'OUTREACH3',    label: 'Community Outreach / Partnerships / Fundraising' },
+  'programming':  { code: 'PROGRAM4',   label: 'Programming & Entertainment' },
+  'branding':     { code: 'BRAND5',    label: 'Branding & Marketing' },
   'board':        { code: 'UNITY',     label: 'Overview' },
 }
 
