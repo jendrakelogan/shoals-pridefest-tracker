@@ -8,7 +8,7 @@ export default function LandingPage({ subcommittees, passcodes, onLogin }) {
 
   const allEntries = [
     ...subcommittees,
-    { id: 'board', label: 'Overview', emoji: '👑', color: '#2C2C2C' }
+    { id: 'board', label: 'Overview', emoji: '🌈', color: '#2C2C2C' }
   ]
 
   const handleSelect = (id) => {
