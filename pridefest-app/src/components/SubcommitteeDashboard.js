@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabaseClient'
 
 const STATUS_OPTS = ['Not Started', 'In Progress', 'Done']
@@ -8,89 +8,59 @@ const STATUS_STYLE = {
   'Done':        { bg: '#D1FAE5', color: '#059669' },
 }
 
+function timeAgo(dateStr) {
+  if (!dateStr) return null
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 60)   return 'just now'
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
+}
+
 function TaskCard({ task, catId, ti, totalTasks, isMobile, scColor, onUpdate, onDelete, onMoveUp, onMoveDown }) {
   const ss = STATUS_STYLE[task.status] || STATUS_STYLE['Not Started']
+  const updatedLabel = timeAgo(task.updated_at)
 
   const ReorderButtons = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
-      <button
-        onClick={() => onMoveUp(catId, ti)}
-        disabled={ti === 0}
-        title="Move up"
-        style={{
-          background: ti === 0 ? '#F3F4F6' : scColor,
-          border: 'none', borderRadius: '4px', color: ti === 0 ? '#D1D5DB' : '#FFF',
-          fontSize: '10px', padding: '2px 5px', cursor: ti === 0 ? 'default' : 'pointer',
-          lineHeight: 1,
-        }}
-      >▲</button>
-      <button
-        onClick={() => onMoveDown(catId, ti)}
-        disabled={ti === totalTasks - 1}
-        title="Move down"
-        style={{
-          background: ti === totalTasks - 1 ? '#F3F4F6' : scColor,
-          border: 'none', borderRadius: '4px', color: ti === totalTasks - 1 ? '#D1D5DB' : '#FFF',
-          fontSize: '10px', padding: '2px 5px', cursor: ti === totalTasks - 1 ? 'default' : 'pointer',
-          lineHeight: 1,
-        }}
-      >▼</button>
+      <button onClick={() => onMoveUp(catId, ti)} disabled={ti === 0}
+        style={{ background: ti === 0 ? '#F3F4F6' : scColor, border: 'none', borderRadius: '4px', color: ti === 0 ? '#D1D5DB' : '#FFF', fontSize: '10px', padding: '2px 5px', cursor: ti === 0 ? 'default' : 'pointer', lineHeight: 1 }}>▲</button>
+      <button onClick={() => onMoveDown(catId, ti)} disabled={ti === totalTasks - 1}
+        style={{ background: ti === totalTasks - 1 ? '#F3F4F6' : scColor, border: 'none', borderRadius: '4px', color: ti === totalTasks - 1 ? '#D1D5DB' : '#FFF', fontSize: '10px', padding: '2px 5px', cursor: ti === totalTasks - 1 ? 'default' : 'pointer', lineHeight: 1 }}>▼</button>
     </div>
   )
 
   if (isMobile) {
     return (
-      <div style={{
-        padding: '14px 16px',
-        borderBottom: ti < totalTasks - 1 ? '1px solid #F3F4F6' : 'none',
-        background: ti % 2 === 1 ? '#FAFAFA' : '#FFF',
-      }}>
-        {/* Top row: reorder + status + delete */}
+      <div style={{ padding: '14px 16px', borderBottom: ti < totalTasks - 1 ? '1px solid #F3F4F6' : 'none', background: ti % 2 === 1 ? '#FAFAFA' : '#FFF' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
           <ReorderButtons />
-          <select
-            value={task.status}
-            onChange={e => onUpdate(catId, task.id, 'status', e.target.value)}
-            style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', background: ss.bg, color: ss.color, outline: 'none' }}
-          >
+          <select value={task.status} onChange={e => onUpdate(catId, task.id, 'status', e.target.value)}
+            style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', background: ss.bg, color: ss.color, outline: 'none' }}>
             {STATUS_OPTS.map(s => <option key={s}>{s}</option>)}
           </select>
-          <button
-            onClick={() => onDelete(catId, task.id)}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#D1D5DB', fontSize: '18px', padding: '0 4px' }}
-          >✕</button>
+          {updatedLabel && (
+            <span style={{ fontSize: '11px', color: '#9CA3AF', marginLeft: 'auto', fontStyle: 'italic' }}>✎ {updatedLabel}</span>
+          )}
+          <button onClick={() => onDelete(catId, task.id)}
+            style={{ background: 'none', border: 'none', color: '#D1D5DB', fontSize: '18px', padding: '0 4px' }}>✕</button>
         </div>
-
         <div style={{ marginBottom: '8px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Task</div>
-          <textarea
-            value={task.description}
-            onChange={e => onUpdate(catId, task.id, 'description', e.target.value)}
-            placeholder="What needs to be done..."
-            rows={2}
-            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '14px', color: '#1F2937', resize: 'vertical', outline: 'none', lineHeight: '1.5', background: '#fff', boxSizing: 'border-box' }}
-          />
+          <textarea value={task.description} onChange={e => onUpdate(catId, task.id, 'description', e.target.value)}
+            placeholder="What needs to be done..." rows={2}
+            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '14px', color: '#1F2937', resize: 'vertical', outline: 'none', lineHeight: '1.5', background: '#fff', boxSizing: 'border-box' }} />
         </div>
-
         <div style={{ marginBottom: '8px' }}>
           <div style={{ fontSize: '11px', fontWeight: '700', color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Taking the Lead</div>
-          <input
-            value={task.lead}
-            onChange={e => onUpdate(catId, task.id, 'lead', e.target.value)}
-            placeholder="Name..."
-            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '14px', color: '#374151', outline: 'none', boxSizing: 'border-box' }}
-          />
+          <input value={task.lead} onChange={e => onUpdate(catId, task.id, 'lead', e.target.value)} placeholder="Name..."
+            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '14px', color: '#374151', outline: 'none', boxSizing: 'border-box' }} />
         </div>
-
         <div>
           <div style={{ fontSize: '11px', fontWeight: '700', color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>Progress Notes</div>
-          <textarea
-            value={task.progress}
-            onChange={e => onUpdate(catId, task.id, 'progress', e.target.value)}
-            placeholder="Updates, blockers..."
-            rows={2}
-            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '13px', color: '#6B7280', resize: 'vertical', outline: 'none', fontStyle: 'italic', lineHeight: '1.5', background: '#fff', boxSizing: 'border-box' }}
-          />
+          <textarea value={task.progress} onChange={e => onUpdate(catId, task.id, 'progress', e.target.value)}
+            placeholder="Updates, blockers..." rows={2}
+            style={{ width: '100%', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '8px', fontSize: '13px', color: '#6B7280', resize: 'vertical', outline: 'none', fontStyle: 'italic', lineHeight: '1.5', background: '#fff', boxSizing: 'border-box' }} />
         </div>
       </div>
     )
@@ -98,15 +68,10 @@ function TaskCard({ task, catId, ti, totalTasks, isMobile, scColor, onUpdate, on
 
   // Desktop
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '44px 1fr 180px 130px 1fr 40px',
-      padding: '12px 20px',
-      borderBottom: ti < totalTasks - 1 ? '1px solid #F3F4F6' : 'none',
-      background: ti % 2 === 1 ? '#FAFAFA' : '#FFF',
-      alignItems: 'center',
-    }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr 180px 130px 1fr 100px 40px', padding: '12px 20px', borderBottom: ti < totalTasks - 1 ? '1px solid #F3F4F6' : 'none', background: ti % 2 === 1 ? '#FAFAFA' : '#FFF', alignItems: 'center' }}>
       <ReorderButtons />
-      <textarea value={task.description} onChange={e => onUpdate(catId, task.id, 'description', e.target.value)} placeholder="What needs to be done..." rows={2}
+      <textarea value={task.description} onChange={e => onUpdate(catId, task.id, 'description', e.target.value)}
+        placeholder="What needs to be done..." rows={2}
         style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '14px', color: '#1F2937', resize: 'vertical', outline: 'none', paddingRight: '12px', lineHeight: '1.5' }} />
       <input value={task.lead} onChange={e => onUpdate(catId, task.id, 'lead', e.target.value)} placeholder="Name..."
         style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '14px', color: '#374151', outline: 'none', paddingRight: '12px' }} />
@@ -114,8 +79,12 @@ function TaskCard({ task, catId, ti, totalTasks, isMobile, scColor, onUpdate, on
         style={{ border: 'none', borderRadius: '8px', padding: '4px 8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', background: ss.bg, color: ss.color, outline: 'none', marginRight: '12px' }}>
         {STATUS_OPTS.map(s => <option key={s}>{s}</option>)}
       </select>
-      <textarea value={task.progress} onChange={e => onUpdate(catId, task.id, 'progress', e.target.value)} placeholder="Progress notes, updates, blockers..." rows={2}
+      <textarea value={task.progress} onChange={e => onUpdate(catId, task.id, 'progress', e.target.value)}
+        placeholder="Progress notes, updates, blockers..." rows={2}
         style={{ width: '100%', border: 'none', background: 'transparent', fontSize: '13px', color: '#6B7280', resize: 'vertical', outline: 'none', fontStyle: 'italic', lineHeight: '1.5' }} />
+      <div style={{ fontSize: '11px', color: '#9CA3AF', fontStyle: 'italic', textAlign: 'center', paddingRight: '8px' }}>
+        {updatedLabel ? `✎ ${updatedLabel}` : '—'}
+      </div>
       <button onClick={() => onDelete(catId, task.id)}
         style={{ background: 'none', border: 'none', color: '#D1D5DB', fontSize: '16px', padding: '4px', borderRadius: '6px', transition: 'color 0.15s' }}
         onMouseOver={e => e.target.style.color = '#EF4444'} onMouseOut={e => e.target.style.color = '#D1D5DB'}>✕</button>
@@ -159,11 +128,11 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
     }))
   }
 
-  const handleMoveUp   = (catId, ti) => { if (ti > 0) moveTask(catId, ti, ti - 1) }
-  const handleMoveDown = (catId, ti) => {
+  const handleMoveUp   = useCallback((catId, ti) => { if (ti > 0) moveTask(catId, ti, ti - 1) }, [categories]) // eslint-disable-line react-hooks/exhaustive-deps
+  const handleMoveDown = useCallback((catId, ti) => {
     const cat = categories.find(c => c.id === catId)
     if (cat && ti < cat.tasks.length - 1) moveTask(catId, ti, ti + 1)
-  }
+  }, [categories]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function addCategory() {
     if (!newCatName.trim()) return
@@ -188,10 +157,11 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
   }
 
   async function updateTask(catId, taskId, field, value) {
+    const now = new Date().toISOString()
     setCategories(prev => prev.map(c =>
-      c.id === catId ? { ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, [field]: value } : t) } : c
+      c.id === catId ? { ...c, tasks: c.tasks.map(t => t.id === taskId ? { ...t, [field]: value, updated_at: now } : t) } : c
     ))
-    await supabase.from('tasks').update({ [field]: value }).eq('id', taskId)
+    await supabase.from('tasks').update({ [field]: value, updated_at: now }).eq('id', taskId)
   }
 
   async function deleteTask(catId, taskId) {
@@ -202,7 +172,6 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
   return (
     <div style={{ minHeight: '100vh', background: '#F8F7F4', display: 'flex', flexDirection: 'column' }}>
       <div className="rainbow-bar" />
-
       <div style={{ background: sc.color }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '28px 24px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
@@ -239,9 +208,9 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
                 </div>
 
                 {!isMobile && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr 180px 130px 1fr 40px', background: '#F9FAFB', borderBottom: '1.5px solid #E5E7EB', padding: '10px 20px' }}>
-                    {['', 'Task — What Needs to Be Done', 'Taking the Lead', 'Status', 'Progress Notes', ''].map((h, i) => (
-                      <div key={i} style={{ fontSize: '11px', fontWeight: '700', color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', paddingRight: i < 5 ? '12px' : '0' }}>{h}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '44px 1fr 180px 130px 1fr 100px 40px', background: '#F9FAFB', borderBottom: '1.5px solid #E5E7EB', padding: '10px 20px' }}>
+                    {['', 'Task — What Needs to Be Done', 'Taking the Lead', 'Status', 'Progress Notes', 'Last Updated', ''].map((h, i) => (
+                      <div key={i} style={{ fontSize: '11px', fontWeight: '700', color: '#9CA3AF', letterSpacing: '0.08em', textTransform: 'uppercase', paddingRight: i < 6 ? '12px' : '0' }}>{h}</div>
                     ))}
                   </div>
                 )}
@@ -251,19 +220,9 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
                 )}
 
                 {cat.tasks.map((task, ti) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    catId={cat.id}
-                    ti={ti}
-                    totalTasks={cat.tasks.length}
-                    isMobile={isMobile}
-                    scColor={sc.color}
-                    onUpdate={updateTask}
-                    onDelete={deleteTask}
-                    onMoveUp={handleMoveUp}
-                    onMoveDown={handleMoveDown}
-                  />
+                  <TaskCard key={task.id} task={task} catId={cat.id} ti={ti} totalTasks={cat.tasks.length}
+                    isMobile={isMobile} scColor={sc.color} onUpdate={updateTask} onDelete={deleteTask}
+                    onMoveUp={handleMoveUp} onMoveDown={handleMoveDown} />
                 ))}
 
                 <div style={{ padding: '12px 20px', borderTop: '1px solid #F3F4F6' }}>
@@ -289,7 +248,6 @@ export default function SubcommitteeDashboard({ subcommittee, onLogout }) {
           </>
         )}
       </div>
-
       <div className="rainbow-bar" style={{ marginTop: 'auto' }} />
     </div>
   )
