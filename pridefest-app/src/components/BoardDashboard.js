@@ -133,29 +133,32 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                           const updated = timeAgo(task.updated_at)
                           return (
                             <div key={task.id} style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 160px 110px 1fr 90px',
-                              gap: '12px', padding: '10px 24px',
+                              padding: '12px 24px',
                               background: ti % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                              alignItems: 'start',
+                              borderBottom: '1px solid rgba(255,255,255,0.04)',
                             }}>
-                              <div style={{ fontSize: '14px', color: '#E5E7EB', lineHeight: 1.5 }}>
-                                {task.description || <span style={{ color: '#4B5563', fontStyle: 'italic' }}>No description</span>}
-                              </div>
-                              <div style={{ fontSize: '13px', color: '#9CA3AF' }}>
-                                {task.lead || <span style={{ fontStyle: 'italic' }}>Unassigned</span>}
-                              </div>
-                              <div>
+                              {/* Top row: status + updated */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px', background: ss.bg, color: ss.color }}>
                                   {task.status}
                                 </span>
+                                {updated && (
+                                  <span style={{ fontSize: '11px', color: '#4B5563', fontStyle: 'italic' }}>✎ {updated}</span>
+                                )}
+                                {task.lead && (
+                                  <span style={{ fontSize: '12px', color: '#9CA3AF', marginLeft: 'auto' }}>👤 {task.lead}</span>
+                                )}
                               </div>
-                              <div style={{ fontSize: '13px', color: '#6B7280', fontStyle: 'italic', lineHeight: 1.5 }}>
-                                {task.progress || '—'}
+                              {/* Task description */}
+                              <div style={{ fontSize: '14px', color: '#E5E7EB', lineHeight: 1.5, marginBottom: task.progress ? '6px' : '0' }}>
+                                {task.description || <span style={{ color: '#4B5563', fontStyle: 'italic' }}>No description</span>}
                               </div>
-                              <div style={{ fontSize: '11px', color: '#4B5563', fontStyle: 'italic', textAlign: 'right' }}>
-                                {updated ? `✎ ${updated}` : '—'}
-                              </div>
+                              {/* Progress notes */}
+                              {task.progress && (
+                                <div style={{ fontSize: '13px', color: '#6B7280', fontStyle: 'italic', lineHeight: 1.5 }}>
+                                  {task.progress}
+                                </div>
+                              )}
                             </div>
                           )
                         })}
