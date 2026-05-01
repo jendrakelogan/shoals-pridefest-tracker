@@ -7,9 +7,18 @@ const STATUS_STYLE = {
   'Done':        { bg: '#D1FAE5', color: '#059669' },
 }
 
+function timeAgo(dateStr) {
+  if (!dateStr) return null
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (diff < 60)    return 'just now'
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
+}
+
 export default function BoardDashboard({ subcommittees, onLogout }) {
-  const [data, setData]       = useState({})
-  const [loading, setLoading] = useState(true)
+  const [data, setData]         = useState({})
+  const [loading, setLoading]   = useState(true)
   const [expanded, setExpanded] = useState({})
 
   useEffect(() => { loadAll() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -25,16 +34,13 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
         .eq('subcommittee_id', sc.id)
         .order('created_at')
 
-      if (!cats || cats.length === 0) {
-        result[sc.id] = []
-        continue
-      }
+      if (!cats || cats.length === 0) { result[sc.id] = []; continue }
 
       const { data: tasks } = await supabase
         .from('tasks')
         .select('*')
         .in('category_id', cats.map(c => c.id))
-        .order('created_at')
+        .order('sort_order', { ascending: true })
 
       result[sc.id] = cats.map(cat => ({
         ...cat,
@@ -56,10 +62,9 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
     <div style={{ minHeight: '100vh', background: '#0F0F1A', display: 'flex', flexDirection: 'column' }}>
       <div className="rainbow-bar" />
 
-      {/* Header */}
       <div style={{ padding: '36px 24px 32px', textAlign: 'center' }}>
         <div style={{ fontSize: '12px', fontWeight: '600', letterSpacing: '0.18em', color: '#FFD700', textTransform: 'uppercase', marginBottom: '10px' }}>
-          👑 Board Overview — Read Only
+          🌈 Overview — Read Only
         </div>
         <h1 style={{ fontSize: 'clamp(26px, 5vw, 48px)', color: '#FFF', marginBottom: '8px' }}>
           Shoals PrideFest 2026
@@ -67,25 +72,21 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
         <p style={{ color: '#9CA3AF', fontSize: '15px', marginBottom: '32px' }}>
           All subcommittee activity — view only
         </p>
-        <button
-          onClick={onLogout}
-          style={{
-            padding: '10px 22px', background: 'rgba(255,255,255,0.08)',
-            border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: '10px',
-            color: '#FFF', fontSize: '13px', fontWeight: '600',
-          }}
-        >← Back to Login</button>
+        <button onClick={onLogout} style={{
+          padding: '10px 22px', background: 'rgba(255,255,255,0.08)',
+          border: '1.5px solid rgba(255,255,255,0.2)', borderRadius: '10px',
+          color: '#FFF', fontSize: '13px', fontWeight: '600',
+        }}>← Back to Login</button>
       </div>
 
-      {/* Content */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 24px 80px', width: '100%' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px', color: '#9CA3AF' }}>Loading all subcommittees...</div>
         ) : (
           subcommittees.map((sc, i) => {
-            const cats = data[sc.id] || []
-            const total = totalTasks(sc.id)
-            const done  = doneTasks(sc.id)
+            const cats   = data[sc.id] || []
+            const total  = totalTasks(sc.id)
+            const done   = doneTasks(sc.id)
             const inProg = inProgress(sc.id)
             const isOpen = expanded[sc.id]
 
@@ -94,19 +95,13 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                 animationDelay: `${i * 0.07}s`,
                 background: 'rgba(255,255,255,0.05)',
                 border: `1.5px solid ${sc.color}55`,
-                borderRadius: '18px',
-                marginBottom: '16px',
-                overflow: 'hidden',
+                borderRadius: '18px', marginBottom: '16px', overflow: 'hidden',
               }}>
-                {/* SC Header */}
-                <div
-                  onClick={() => toggleSC(sc.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '14px',
-                    padding: '20px 24px', cursor: 'pointer',
-                    borderLeft: `5px solid ${sc.color}`,
-                  }}
-                >
+                <div onClick={() => toggleSC(sc.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '20px 24px', cursor: 'pointer',
+                  borderLeft: `5px solid ${sc.color}`,
+                }}>
                   <span style={{ fontSize: '22px' }}>{sc.emoji}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '16px', fontWeight: '700', color: '#FFF' }}>{sc.label}</div>
@@ -120,7 +115,6 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                   <span style={{ color: '#9CA3AF', fontSize: '20px', transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'none' }}>›</span>
                 </div>
 
-                {/* Expanded categories & tasks */}
                 {isOpen && (
                   <div className="fade-in" style={{ borderTop: `1px solid ${sc.color}33` }}>
                     {cats.length === 0 ? (
@@ -128,7 +122,7 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                         This subcommittee hasn't added any categories yet.
                       </div>
                     ) : cats.map(cat => (
-                      <div key={cat.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                      <div key={cat.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <div style={{ padding: '14px 24px 10px', fontSize: '13px', fontWeight: '700', color: sc.color, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                           {cat.name} <span style={{ color: '#6B7280', fontWeight: '400', textTransform: 'none', letterSpacing: 0 }}>({cat.tasks.length} tasks)</span>
                         </div>
@@ -136,12 +130,12 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                           <div style={{ padding: '0 24px 14px', color: '#6B7280', fontSize: '13px', fontStyle: 'italic' }}>No tasks yet</div>
                         ) : cat.tasks.map((task, ti) => {
                           const ss = STATUS_STYLE[task.status] || STATUS_STYLE['Not Started']
+                          const updated = timeAgo(task.updated_at)
                           return (
                             <div key={task.id} style={{
                               display: 'grid',
-                              gridTemplateColumns: '1fr 160px 110px 1fr',
-                              gap: '12px',
-                              padding: '10px 24px',
+                              gridTemplateColumns: '1fr 160px 110px 1fr 90px',
+                              gap: '12px', padding: '10px 24px',
                               background: ti % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
                               alignItems: 'start',
                             }}>
@@ -152,17 +146,20 @@ export default function BoardDashboard({ subcommittees, onLogout }) {
                                 {task.lead || <span style={{ fontStyle: 'italic' }}>Unassigned</span>}
                               </div>
                               <div>
-                                <span style={{
-                                  fontSize: '11px', fontWeight: '700', padding: '3px 10px',
-                                  borderRadius: '20px', background: ss.bg, color: ss.color,
-                                }}>{task.status}</span>
+                                <span style={{ fontSize: '11px', fontWeight: '700', padding: '3px 10px', borderRadius: '20px', background: ss.bg, color: ss.color }}>
+                                  {task.status}
+                                </span>
                               </div>
                               <div style={{ fontSize: '13px', color: '#6B7280', fontStyle: 'italic', lineHeight: 1.5 }}>
                                 {task.progress || '—'}
                               </div>
+                              <div style={{ fontSize: '11px', color: '#4B5563', fontStyle: 'italic', textAlign: 'right' }}>
+                                {updated ? `✎ ${updated}` : '—'}
+                              </div>
                             </div>
                           )
                         })}
+                        {/* Column headers for first category */}
                       </div>
                     ))}
                   </div>
